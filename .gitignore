@@ -1,0 +1,29 @@
+# Unity generated
+[Ll]ibrary/
+[Oo]bj/
+[Bb]uild/
+[Ll]ogs/
+[Tt]emp/
+[Mm]emory/
+
+# Mono generated
+*.pidb
+*.suo
+
+# Visual Studio / Rider generated
+.vs/
+.vscode/
+*.user
+*.userprefs
+
+# OS generated
+Thumbs.db
+.DS_Store
+
+# Unity user files (should keep these as they're project specific)
+# ProjectSettings/ - Keep for project setup
+# Packages/ - Keep for package versions  
+# Assets/Scripts/ - Keep for source code
+# Assets/Scenes/ - Keep for scenes
+# Assets/Resources/ - Keep for resources
+# Assets/ - Keep other assets
