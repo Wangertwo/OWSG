@@ -27,6 +27,33 @@
 .DS_Store
 Thumbs.db
 
+# Third-party assets (can be re-downloaded from Asset Store)
+Assets/Clean Vector Icons/
+Assets/Fantasy Skybox FREE/
+Assets/Fantasy Wooden GUI  Free/
+Assets/FantasyEnvironments/
+Assets/Free/
+Assets/NOT_Lonely/
+Assets/Santutu/
+Assets/TerrainSampleAssets/
+Assets/Rabbits/
+Assets/TextMesh Pro/
+Assets/HDRPDefaultResources/
+Assets/Cursors/
+Assets/GUI_Parts/
+Assets/Fonts/
+Assets/Sound/
+Assets/Material/
+Assets/Prefabs/
+Assets/Tests/
+
+# 3D Models
+Assets/Wooden Sticks.fbx
+Assets/Wooden Sticks.obj
+
+# Other generated files
+Assets/UniversalRenderPipelineGlobalSettings.asset
+
 # User settings (should not be committed)
 UserSettings/
 
