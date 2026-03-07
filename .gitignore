@@ -9,21 +9,29 @@
 # Mono generated
 *.pidb
 *.suo
-
-# Visual Studio / Rider generated
-.vs/
-.vscode/
+*.csproj
+*.unityproj
+*.sln
 *.user
 *.userprefs
 
-# OS generated
-Thumbs.db
-.DS_Store
+# Rider
+.idea/
 
-# Unity user files (should keep these as they're project specific)
-# ProjectSettings/ - Keep for project setup
-# Packages/ - Keep for package versions  
-# Assets/Scripts/ - Keep for source code
-# Assets/Scenes/ - Keep for scenes
-# Assets/Resources/ - Keep for resources
-# Assets/ - Keep other assets
+# Visual Studio
+.vs/
+*.suo
+*.tmp
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# User settings (should not be committed)
+UserSettings/
+
+# Documentation (should not be committed)
+docs/
+task_plan.md
+findings.md
+progress.md
