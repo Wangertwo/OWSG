@@ -30,6 +30,10 @@ Thumbs.db
 # User settings (should not be committed)
 UserSettings/
 
+# IDE
+.vscode/
+.idea/
+
 # Documentation (should not be committed)
 docs/
 task_plan.md
