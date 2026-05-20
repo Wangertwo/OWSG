@@ -26,6 +26,11 @@ public class ChatSessionContext
         return new ChatRequest(SessionId, CharacterId, userText);
     }
 
+    public ChatRequest BuildRequest(string userText, string chatMode)
+    {
+        return new ChatRequest(SessionId, CharacterId, "chat", chatMode, userText);
+    }
+
     public void SetState(ChatState nextState)
     {
         State = nextState;

@@ -1,10 +1,12 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(Collider))]
 public class NpcChatInteractable : MonoBehaviour
 {
     [SerializeField] private ChatFlowController chatFlowController;
     [SerializeField] private ChatPanelController chatPanel;
+    [SerializeField] private NpcDialogueAgent npcDialogueAgent;
     [SerializeField] private Transform playerTransform;
     [SerializeField] private KeyCode interactKey = KeyCode.E;
     [SerializeField] private KeyCode closeKey = KeyCode.Escape;
@@ -16,12 +18,20 @@ public class NpcChatInteractable : MonoBehaviour
     [SerializeField] private GameObject selectionObjectOverride;
     [SerializeField] private bool autoCloseWhenOutOfRange = true;
 
+    private static NpcChatInteractable activeInteractable;
+    private static readonly List<NpcChatInteractable> registeredInteractables = new List<NpcChatInteractable>();
     private bool playerInTriggerRange;
+    private Coroutine ensureIdleRoutine;
 
     private void Reset()
     {
         chatFlowController = FindObjectOfType<ChatFlowController>();
         chatPanel = FindObjectOfType<ChatPanelController>();
+        npcDialogueAgent = GetComponent<NpcDialogueAgent>();
+        if (npcDialogueAgent == null)
+        {
+            npcDialogueAgent = GetComponentInParent<NpcDialogueAgent>();
+        }
         selectionObjectOverride = gameObject;
 
         Collider targetCollider = GetComponent<Collider>();
@@ -48,6 +58,15 @@ public class NpcChatInteractable : MonoBehaviour
             chatPanel = FindObjectOfType<ChatPanelController>();
         }
 
+        if (npcDialogueAgent == null)
+        {
+            npcDialogueAgent = GetComponent<NpcDialogueAgent>();
+            if (npcDialogueAgent == null)
+            {
+                npcDialogueAgent = GetComponentInParent<NpcDialogueAgent>();
+            }
+        }
+
         if (playerTransform == null)
         {
             GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -66,6 +85,11 @@ public class NpcChatInteractable : MonoBehaviour
 
     private void OnEnable()
     {
+        if (!registeredInteractables.Contains(this))
+        {
+            registeredInteractables.Add(this);
+        }
+
         if (chatPanel != null)
         {
             chatPanel.CloseRequested += HandleCloseRequested;
@@ -74,9 +98,16 @@ public class NpcChatInteractable : MonoBehaviour
 
     private void OnDisable()
     {
+        registeredInteractables.Remove(this);
+
         if (chatPanel != null)
         {
             chatPanel.CloseRequested -= HandleCloseRequested;
+        }
+
+        if (activeInteractable == this)
+        {
+            activeInteractable = null;
         }
     }
 
@@ -84,24 +115,23 @@ public class NpcChatInteractable : MonoBehaviour
     {
         bool playerInRange = IsPlayerInRange();
 
-        if (playerInRange && Input.GetKeyDown(interactKey) && CanInteract())
+        if (playerInRange && Input.GetKeyDown(interactKey) && CanInteract() && IsPrimaryInteractionCandidate(playerInRange))
         {
-            if (chatFlowController != null && chatFlowController.IsChatUiOpen)
-            {
-                CloseChat();
-            }
-            else
+            if (chatFlowController == null || !chatFlowController.IsChatUiOpen)
             {
                 OpenChat();
             }
         }
 
-        if (chatFlowController != null && chatFlowController.IsChatUiOpen && Input.GetKeyDown(closeKey))
+        bool isCurrentActiveNpc = activeInteractable == this;
+
+        if (isCurrentActiveNpc && chatFlowController != null && chatFlowController.IsChatUiOpen && Input.GetKeyDown(closeKey))
         {
             CloseChat();
         }
 
-        if (autoCloseWhenOutOfRange && !playerInRange && chatFlowController != null && chatFlowController.IsChatUiOpen)
+        if (isCurrentActiveNpc && autoCloseWhenOutOfRange && !playerInRange &&
+            chatFlowController != null && chatFlowController.IsChatUiOpen)
         {
             CloseChat();
         }
@@ -134,8 +164,35 @@ public class NpcChatInteractable : MonoBehaviour
             return;
         }
 
+        ResolveOrCreateDialogueAgent();
+
+        if (ensureIdleRoutine != null)
+        {
+            StopCoroutine(ensureIdleRoutine);
+            ensureIdleRoutine = null;
+        }
+
+        if (activeInteractable != null && activeInteractable != this)
+        {
+            activeInteractable.ForceReturnToIdle();
+        }
+
+        activeInteractable = this;
+        chatFlowController.SetActiveNpc(npcDialogueAgent);
+
+        CharacterAnimationController activeAnimationController = ResolveAnimationController();
+        if (activeAnimationController != null)
+        {
+            activeAnimationController.ApplyAnimation("talk");
+        }
+        else
+        {
+            Debug.LogWarning("NpcChatInteractable: no CharacterAnimationController found on " + gameObject.name + ". NPC talking animation cannot be applied.");
+        }
+
         UnlockCursorForChat();
         chatFlowController.OpenChatUI();
+        chatFlowController.SetActiveNpc(npcDialogueAgent);
 
         if (chatPanel != null)
         {
@@ -148,6 +205,24 @@ public class NpcChatInteractable : MonoBehaviour
         if (chatFlowController != null)
         {
             chatFlowController.CloseChatUI();
+            chatFlowController.ClearActiveNpc();
+        }
+
+        CharacterAnimationController activeAnimationController = ResolveAnimationController();
+        if (activeAnimationController != null)
+        {
+            activeAnimationController.ApplyAnimation("idle");
+        }
+
+        if (ensureIdleRoutine != null)
+        {
+            StopCoroutine(ensureIdleRoutine);
+        }
+        ensureIdleRoutine = StartCoroutine(EnsureIdleAfterClose());
+
+        if (activeInteractable == this)
+        {
+            activeInteractable = null;
         }
 
         RestoreCursorAfterChat();
@@ -228,6 +303,11 @@ public class NpcChatInteractable : MonoBehaviour
 
     private void HandleCloseRequested()
     {
+        if (activeInteractable != this)
+        {
+            return;
+        }
+
         CloseChat();
     }
 
@@ -276,5 +356,130 @@ public class NpcChatInteractable : MonoBehaviour
         }
 
         return false;
+    }
+
+    private CharacterAnimationController ResolveAnimationController()
+    {
+        if (npcDialogueAgent != null && npcDialogueAgent.AnimationController != null)
+        {
+            return npcDialogueAgent.AnimationController;
+        }
+
+        CharacterAnimationController localController = GetComponent<CharacterAnimationController>();
+        if (localController != null)
+        {
+            return localController;
+        }
+
+        CharacterAnimationController childController = GetComponentInChildren<CharacterAnimationController>(true);
+        if (childController != null)
+        {
+            return childController;
+        }
+
+        return GetComponentInParent<CharacterAnimationController>();
+    }
+
+    private void ResolveOrCreateDialogueAgent()
+    {
+        if (npcDialogueAgent != null)
+        {
+            return;
+        }
+
+        npcDialogueAgent = GetComponent<NpcDialogueAgent>();
+        if (npcDialogueAgent == null)
+        {
+            npcDialogueAgent = GetComponentInParent<NpcDialogueAgent>();
+        }
+
+        if (npcDialogueAgent == null)
+        {
+            npcDialogueAgent = gameObject.AddComponent<NpcDialogueAgent>();
+            Debug.LogWarning("NpcChatInteractable: NpcDialogueAgent was missing. Added a default agent at runtime on " + gameObject.name + ".");
+        }
+    }
+
+    private bool IsPrimaryInteractionCandidate(bool thisInRange)
+    {
+        if (!thisInRange)
+        {
+            return false;
+        }
+
+        Transform thisPlayer = ResolvePlayerTransformReference();
+        float thisDistance = ResolveDistanceToPlayer(thisPlayer);
+        int thisId = GetInstanceID();
+
+        for (int i = 0; i < registeredInteractables.Count; i++)
+        {
+            NpcChatInteractable other = registeredInteractables[i];
+            if (other == null || other == this || !other.isActiveAndEnabled)
+            {
+                continue;
+            }
+
+            if (!other.IsPlayerInRange() || !other.CanInteract())
+            {
+                continue;
+            }
+
+            Transform otherPlayer = other.ResolvePlayerTransformReference();
+            float otherDistance = other.ResolveDistanceToPlayer(otherPlayer);
+
+            if (otherDistance + 0.01f < thisDistance)
+            {
+                return false;
+            }
+
+            if (Mathf.Abs(otherDistance - thisDistance) <= 0.01f && other.GetInstanceID() < thisId)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private Transform ResolvePlayerTransformReference()
+    {
+        if (playerTransform != null)
+        {
+            return playerTransform;
+        }
+
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            playerTransform = player.transform;
+        }
+
+        return playerTransform;
+    }
+
+    private float ResolveDistanceToPlayer(Transform targetPlayer)
+    {
+        if (targetPlayer == null)
+        {
+            return float.MaxValue;
+        }
+
+        return Vector3.Distance(targetPlayer.position, transform.position);
+    }
+
+    private void ForceReturnToIdle()
+    {
+        CharacterAnimationController activeAnimationController = ResolveAnimationController();
+        if (activeAnimationController != null)
+        {
+            activeAnimationController.ApplyAnimation("idle");
+        }
+    }
+
+    private System.Collections.IEnumerator EnsureIdleAfterClose()
+    {
+        yield return null;
+        ForceReturnToIdle();
+        ensureIdleRoutine = null;
     }
 }

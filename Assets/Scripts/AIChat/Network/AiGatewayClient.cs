@@ -139,6 +139,18 @@ public class AiGatewayClient : MonoBehaviour
 
         if (request.result == UnityWebRequest.Result.ConnectionError)
         {
+            if (!string.IsNullOrEmpty(request.error))
+            {
+                string normalizedError = request.error.ToLowerInvariant();
+                if (normalizedError.Contains("timed out") ||
+                    normalizedError.Contains("timeout"))
+                {
+                    return "NETWORK_TIMEOUT";
+                }
+
+                return "NETWORK_ERROR: " + request.error;
+            }
+
             return "NETWORK_ERROR";
         }
 

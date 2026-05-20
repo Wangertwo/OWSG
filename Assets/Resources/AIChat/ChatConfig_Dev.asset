@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5114ead655d71404381fd3085bafc6c3, type: 3}
   m_Name: ChatConfig_Dev
   m_EditorClassIdentifier: 
-  gatewayBaseUrl: http://192.168.249.129:8080
+  gatewayBaseUrl: http://127.0.0.1:58093
   healthPath: /health
   chatPath: /chat
-  requestTimeoutSeconds: 30
+  requestTimeoutSeconds: 60
   sessionId: user_001
   characterId: npc_001

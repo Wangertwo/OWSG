@@ -6,6 +6,12 @@ public class ChatStatusView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private GameObject busyIndicator;
 
+    public void Configure(TextMeshProUGUI text, GameObject indicator = null)
+    {
+        statusText = text;
+        busyIndicator = indicator;
+    }
+
     public void SetDisconnected()
     {
         SetStatus("Disconnected", false);

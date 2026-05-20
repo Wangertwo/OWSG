@@ -7,23 +7,39 @@ public class ChatMessageView : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI transcriptText;
     [SerializeField] private int maxMessageCount = 40;
+    [SerializeField] private string playerSpeakerName = "You";
+    [SerializeField] private string assistantSpeakerName = "NPC";
+    [SerializeField] private string systemSpeakerName = "System";
 
     private readonly Queue<string> messageQueue = new Queue<string>();
     private readonly StringBuilder textBuilder = new StringBuilder();
 
+    public void Configure(TextMeshProUGUI transcript, int maxCount = 40)
+    {
+        transcriptText = transcript;
+        maxMessageCount = Mathf.Max(1, maxCount);
+    }
+
+    public void SetSpeakerNames(string playerName, string assistantName, string systemName = "System")
+    {
+        playerSpeakerName = string.IsNullOrWhiteSpace(playerName) ? "You" : playerName.Trim();
+        assistantSpeakerName = string.IsNullOrWhiteSpace(assistantName) ? "NPC" : assistantName.Trim();
+        systemSpeakerName = string.IsNullOrWhiteSpace(systemName) ? "System" : systemName.Trim();
+    }
+
     public void AppendPlayerMessage(string message)
     {
-        AppendMessage("You", message);
+        AppendMessage(playerSpeakerName, message);
     }
 
     public void AppendAssistantMessage(string message)
     {
-        AppendMessage("NPC", message);
+        AppendMessage(assistantSpeakerName, message);
     }
 
     public void AppendSystemMessage(string message)
     {
-        AppendMessage("System", message);
+        AppendMessage(systemSpeakerName, message);
     }
 
     public void Clear()
@@ -43,7 +59,7 @@ public class ChatMessageView : MonoBehaviour
             return;
         }
 
-        messageQueue.Enqueue("[" + sender + "] " + message.Trim());
+        messageQueue.Enqueue(sender + ": " + message.Trim());
 
         while (messageQueue.Count > maxMessageCount)
         {
