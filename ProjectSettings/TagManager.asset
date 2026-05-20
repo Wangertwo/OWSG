@@ -14,6 +14,7 @@ TagManager:
   - Tree
   - wallGhost
   - placedWall
+  - FishingArea
   layers:
   - Default
   - TransparentFX
