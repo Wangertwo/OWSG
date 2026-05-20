@@ -34,24 +34,15 @@ Uses the Unity Test Framework (`com.unity.test-framework` 1.1.33).
   - Unity.exe -batchmode -runTests -projectPath "<path>" -testPlatform PlayMode -testResults "<path>/TestResults.xml" -quit
 
 ### Run a Single Test
-- Use `-testFilter` with the full test name (supports regex or semicolon lists):
-  - Unity.exe -batchmode -runTests -projectPath "<path>" -testPlatform EditMode -testFilter "Namespace.ClassName.TestName" -testResults "<path>/TestResults.xml" -quit
-- Run by category:
-  - -testCategory "Fast;Smoke" (supports `!` for negation)
-- Run by assembly:
-  - -assemblyNames "MyTests.Assembly"
-- Filter examples:
-  - Exact match: `MyTestClass.MyMethod`
-  - Partial match: `MyTest` (matches any test containing "MyTest")
-  - Multiple: `TestA;TestB` (matches tests containing TestA OR TestB)
+- Use `-testFilter` with the full test name (supports regex or semicolon lists): `Unity.exe -batchmode -runTests -projectPath "<path>" -testPlatform EditMode -testFilter "Namespace.ClassName.TestName" -testResults "<path>/TestResults.xml" -quit`
+- Filter examples: exact `MyTestClass.MyMethod`, partial `MyTest`, multiple `TestA;TestB` (OR logic)
+- Run by category: `-testCategory "Fast;Smoke"` (supports `!` for negation)
+- Run by assembly: `-assemblyNames "MyTests.Assembly"`
 
 ### Notes
-- If no `-testPlatform` is set, Unity defaults to EditMode.
-- `-runSynchronously` is only supported for EditMode and excludes multi-frame tests.
-- Test results are NUnit XML; inspect the XML for failures.
-- No tests or test assemblies were found under `Assets/`. Add `Tests/` and/or `.asmdef` files if you introduce new tests.
-- Store test result XML outside `Assets/` to avoid extra meta changes.
-- Exit code 0 = all tests passed, non-zero = failures occurred.
+- No `-testPlatform` defaults to EditMode; `-runSynchronously` is EditMode-only (excludes multi-frame tests)
+- Test results are NUnit XML; store outside `Assets/` to avoid extra meta changes
+- Exit code 0 = all tests passed, non-zero = failures occurred
 
 ## Lint / Format
 - No lint/format tooling or root `.editorconfig` was found.
@@ -59,10 +50,9 @@ Uses the Unity Test Framework (`com.unity.test-framework` 1.1.33).
 - If you introduce a formatter or analyzer, update this file with commands and config locations.
 
 ## Unity Packages
-- Key packages in use: HDRP, URP, Shader Graph, Timeline, TextMeshPro, Visual Scripting.
-- Avoid upgrading package versions unless required; document any changes here.
-- Keep project-wide rendering changes coordinated with scene/pipeline assets.
-- Do not edit content under `Packages/` directly; use the Package Manager.
+- Key packages: HDRP, URP, Shader Graph, Timeline, TextMeshPro, Visual Scripting
+- Avoid upgrading versions; keep rendering changes coordinated with scene/pipeline assets
+- Use Package Manager, do not edit `Packages/` directly
 
 ## Code Style Guidelines (C# / Unity)
 ### File and Type Organization
@@ -79,11 +69,8 @@ Uses the Unity Test Framework (`com.unity.test-framework` 1.1.33).
 - Existing fields sometimes include underscores (for example, `interaction_Info_UI`); keep consistency within a file.
 
 ### Formatting
-- Braces on next line (Allman) to match existing scripts.
-- Indent with 4 spaces.
-- Put a blank line between logical blocks in methods.
-- Keep methods focused; extract helpers when logic grows.
-- Add comments only when needed to explain non-obvious logic.
+- Braces on next line (Allman), indent with 4 spaces, blank lines between logical blocks
+- Keep methods focused; extract helpers; comments only for non-obvious logic
 
 ### Imports (using directives)
 - Order groups from general to specific:
@@ -94,69 +81,65 @@ Uses the Unity Test Framework (`com.unity.test-framework` 1.1.33).
 - Remove unused `using` statements.
 
 ### Types and Collections
-- Prefer explicit types when it improves clarity for Unity components.
-- `var` is acceptable when the type is obvious from the right-hand side.
-- Use `List<T>` and `Dictionary<TKey, TValue>` from `System.Collections.Generic`.
+- Prefer explicit types for clarity with Unity components; `var` when type is obvious
+- Use `List<T>` and `Dictionary<TKey, TValue>` from `System.Collections.Generic`
 
 ### Serialization and Inspector Usage
-- Prefer `private` fields with `[SerializeField]` over `public` when practical.
-- Cache component references in `Awake` or `Start` instead of calling `GetComponent` every frame.
-- Keep `Resources.Load` paths stable if used; avoid heavy per-frame loads.
+- Follow existing patterns; many fields are public for Inspector assignment
+- Cache component references in `Awake`/`Start`; avoid per-frame `GetComponent`
+- Resources.Load uses item names without extensions; expects `_Model` suffix for equippables
 
 ### Unity Lifecycle Patterns
-- Use `Awake` for caching/setup and `Start` for runtime initialization.
-- Use `OnEnable`/`OnDisable` for event subscriptions.
-- Minimize per-frame allocations in `Update` or `FixedUpdate`.
-- Use `Time.deltaTime` for frame-rate independent movement.
+- `Awake`: singleton setup, caching; `Start`: runtime initialization; `OnEnable`/`OnDisable`: events
+- Minimize per-frame allocations in `Update`/`FixedUpdate`; use `Time.deltaTime`
+
+### Singleton Pattern
+- Managers use `Instance` static property; in `Awake`: if `Instance != null && Instance != this`, `Destroy(this)`, else `Instance = this`
+- Use `get; set;` or `get; private set;` consistently within each file (both exist in codebase)
 
 ### Input and UI
-- Legacy Input Manager is in use (`Input.GetAxis`, `Input.GetButtonDown`).
-- If migrating to the new Input System, do so consistently and update this doc.
-- UI uses TextMeshPro; prefer TMP components (`TextMeshProUGUI`) when touching UI.
+- Legacy Input Manager in use (`Input.GetAxis`, `Input.GetButtonDown`); migrate to new Input System consistently if updating
+- UI uses TextMeshPro; prefer `TextMeshProUGUI` components
 
 ### Error Handling and Logging
-- Guard against `null` for referenced objects (especially Inspector-assigned fields).
-- Use `Debug.LogWarning` for recoverable issues and `Debug.LogError` for critical ones.
-- Prefer early returns to reduce nesting when handling invalid state.
-- Avoid logging every frame unless needed for debugging.
+- Guard against `null` for referenced objects (especially Inspector-assigned fields)
+- Use `Debug.LogWarning` for recoverable issues, `Debug.LogError` for critical ones
+- Prefer early returns; avoid per-frame logging unless debugging
 
 ### Performance Considerations
-- Avoid `Camera.main` calls in tight loops; cache references when possible.
-- Prefer object pooling for frequently created objects.
-- Avoid LINQ in per-frame code paths.
+- Avoid `Camera.main` in tight loops (cache refs e.g., `SelectionManager.cs:48`)
+- Prefer object pooling; avoid LINQ in per-frame code
 
 ## Assets and Metadata
-- Keep `.meta` files in sync; never delete them without intent.
-- When adding assets, follow existing folder conventions under `Assets/`.
-- Do not modify contents under `Library/`, `Temp/`, or `Logs/`.
+- Keep `.meta` files in sync; follow folder conventions under `Assets/`
+- Do not modify `Library/`, `Temp/`, or `Logs/`
 
 ## Scenes and Prefabs
-- Prefer editing prefab assets over scene-only overrides when changes are reusable.
-- Minimize large-scale scene refactors unless requested; keep changes localized.
-- When changing scene references, verify serialized fields remain assigned.
-- Avoid editing imported demo assets unless explicitly needed.
+- Prefer editing prefab assets over scene-only overrides; keep changes localized
+- Verify serialized fields remain assigned when changing scene references
+- Avoid editing imported demo assets
 
 ## Source Control Hygiene
-- Do not add or modify files in `Library/`, `Temp/`, or `Logs/`.
-- Keep `.meta` files paired with their assets in commits.
-- Avoid large binary assets unless necessary; note sizes in the PR/summary.
-- If you add tooling, document its commands in this file.
+- Do not add/modify `Library/`, `Temp/`, or `Logs/`
+- Keep `.meta` files paired with assets; avoid large binaries unless necessary
 
 ## Editor-Only Code
-- Wrap editor-only code in `#if UNITY_EDITOR` and keep `using UnityEditor` inside the guard.
-- Place editor scripts under an `Editor/` folder to avoid player builds including them.
+- Wrap editor code in `#if UNITY_EDITOR` with `using UnityEditor` inside; place under `Editor/` folder
+- No editor-only scripts currently exist
 
 ## Cursor / Copilot Rules
 - No Cursor rules found (`.cursor/rules/` or `.cursorrules`).
 - No Copilot rules found (`.github/copilot-instructions.md`).
 
 ## When Unsure
-- Prefer minimal, localized changes.
-- Follow patterns in nearby scripts (naming and lifecycle methods).
-- Update this file if you add tooling or new conventions.
+- Prefer minimal, localized changes; follow patterns in nearby scripts
+- Update this file when adding tooling or new conventions
 
 ## Debugging Tips
-- Use `Debug.Break()` to pause the editor during play mode.
-- Use `[Conditional("DEBUG")]` attribute to conditionally include debug code.
-- Use `Debug.LogAssertion` for unexpected conditions that shouldn't happen but don't break gameplay.
-- Inspect `UnityEngine.Debug` for available logging methods.
+- Use `Debug.Break()` to pause editor; `[Conditional("DEBUG")]` for debug code
+- `Debug.LogAssertion` for unexpected non-breaking conditions
+
+## Additional Patterns Observed
+- `DestroyImmediate` is used in some contexts (e.g., `EquipSystem.cs`, `ConstructionManager.cs`); prefer `Destroy` for runtime unless immediate cleanup is required.
+- `Time.time` is used for cooldowns and debouncing (e.g., sound cooldowns in `SoundManager.cs`).
+- Input checking is often combined with state checks before action execution (e.g., inventory/menu state).
