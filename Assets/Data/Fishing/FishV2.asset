@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59c4dab1f5def1d45867460ad20b68b8, type: 3}
+  m_Name: FishV2
+  m_EditorClassIdentifier: 
+  fishId: FishV2
+  displayName: "\u5C0F\u7070\u9C7C"
+  description: "\u5E38\u89C1\u4E8E\u7F13\u6D41\u548C\u77F3\u7F1D\u8FB9\uFF0C\u8B66\u60D5\u6027\u6BD4\u5C0F\u84DD\u9C7C\u66F4\u9AD8\uFF0C\u6536\u6746\u8282\u594F\u7A33\u5B9A\u65F6\u66F4\u5BB9\u6613\u4E0A\u94A9\u3002"
+  rarity: 1
+  basePrice: 30
+  defaultCatchWeight: 1

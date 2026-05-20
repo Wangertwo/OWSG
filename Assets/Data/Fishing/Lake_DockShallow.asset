@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 323f5c5b58e978647a73d2e33906847d, type: 3}
+  m_Name: Lake_DockShallow
+  m_EditorClassIdentifier: 
+  lakeId: dock_shallow
+  displayName: "\u7801\u5934\u6D45\u6EE9"
+  locationHint: "\u6CBF\u6845\u6746\u65B9\u5411\u4E00\u76F4\u5F80\u4E1C\u8D70\u5230\u6E21\u53E3\uFF0C\u9760\u6CCA\u6728\u6869\u5916\u4FA7\u662F\u7F13\u6D41\u533A\uFF0C\u9002\u5408\u65B0\u624B\u629B\u7AFF\u3002"
+  unlockedByDefault: 1
+  fishPool:
+  - fishId: FishV1
+    weight: 1
+  - fishId: FishV2
+    weight: 1
+  - fishId: FishV3
+    weight: 1
+  - fishId: FishV4
+    weight: 1
+  - fishId: Shark
+    weight: 1
