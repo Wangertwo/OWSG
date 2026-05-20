@@ -21,8 +21,15 @@ public class PlayerMovement : MonoBehaviour
   
     void Update()
     {
+        if (Cursor.lockState != CursorLockMode.Locked)
+        {
+            StopWalkingAudioIfNeeded();
+            return;
+        }
+
         if (MenuManager.Instance != null && MenuManager.Instance.isMenuOpen)
         {
+            StopWalkingAudioIfNeeded();
             return;
         }
 
@@ -67,5 +74,19 @@ public class PlayerMovement : MonoBehaviour
         velocity.y += gravity * Time.deltaTime;
   
         controller.Move(velocity * Time.deltaTime);
+    }
+
+    private void StopWalkingAudioIfNeeded()
+    {
+        if (!isMoving)
+        {
+            return;
+        }
+
+        isMoving = false;
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.StopGrassWalkSound();
+        }
     }
 }

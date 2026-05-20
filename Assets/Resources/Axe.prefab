@@ -128,3 +128,4 @@ MonoBehaviour:
   isEquipable: 1
   isEquipped: 0
   isSelected: 0
+  isUseable: 0

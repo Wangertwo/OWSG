@@ -43,7 +43,15 @@ public class ConstructionManager : MonoBehaviour
   
     public void ActivateConstructionPlacement(string itemToConstruct)
     {
-        GameObject item = Instantiate(Resources.Load<GameObject>(itemToConstruct));
+        GameObject prefab = Resources.Load<GameObject>(itemToConstruct);
+        if (prefab == null)
+        {
+            Debug.LogWarning("ConstructionManager: missing construction prefab " + itemToConstruct, this);
+            CancelConstructionPlacement();
+            return;
+        }
+
+        GameObject item = Instantiate(prefab);
   
         //change the name of the gameobject so it will not be (clone)
         item.name = itemToConstruct;
@@ -244,23 +252,36 @@ public class ConstructionManager : MonoBehaviour
             {
                 PlaceItemFreeStyle();
                 DestroyItem(itemToBeDestoried);
+                itemToBeDestoried = null;
             }
   
             if (selectingAGhost)
             {
                 PlaceItemInGhostPosition(selectedGhost);
                 DestroyItem(itemToBeDestoried);
+                itemToBeDestoried = null;
             }
         }
-        // Right Mouse Click to Cancel                      //TODO - don't destroy the ui item until you actually placed it.
-        if (Input.GetKeyDown(KeyCode.X))
-        {     // Left Mouse Button
+        if (Input.GetKeyDown(KeyCode.X) && inConstructionMode)
+        {
+            CancelConstructionPlacement();
+        }
+    }
+
+    private void CancelConstructionPlacement()
+    {
+        if (itemToBeDestoried != null)
+        {
             itemToBeDestoried.SetActive(true);
             itemToBeDestoried = null;
-            DestroyItem(itemToBeConstructed);
-            itemToBeConstructed = null;
-            inConstructionMode = false;
         }
+
+        DestroyItem(itemToBeConstructed);
+        itemToBeConstructed = null;
+        selectedGhost = null;
+        selectingAGhost = false;
+        isValidPlacement = false;
+        inConstructionMode = false;
     }
   
     private void PlaceItemInGhostPosition(GameObject copyOfGhost)
@@ -310,9 +331,27 @@ public class ConstructionManager : MonoBehaviour
   
     private void DestroyItem(GameObject item)
     {
+        if (item == null)
+        {
+            RefreshInventoryAndCraftingState();
+            return;
+        }
+
         DestroyImmediate(item);
-        InventorySystem.Instance.ReCalculateList();
-        CraftingSystem.Instance.RefreshNeededItems();
+        RefreshInventoryAndCraftingState();
+    }
+
+    private void RefreshInventoryAndCraftingState()
+    {
+        if (InventorySystem.Instance != null)
+        {
+            InventorySystem.Instance.ReCalculateList();
+        }
+
+        if (CraftingSystem.Instance != null)
+        {
+            CraftingSystem.Instance.RefreshNeededItems();
+        }
     }
     private void PlaceItemFreeStyle()
     {

@@ -64,6 +64,12 @@ public class InventorySystem : MonoBehaviour
  
     void Update()
     {
+        bool canProcessInventoryHotkey = isOpen || Cursor.lockState == CursorLockMode.Locked || CraftingSystem.Instance.isOpen;
+        if (!canProcessInventoryHotkey)
+        {
+            return;
+        }
+
  
         if (Input.GetKeyDown(KeyCode.I) && !isOpen && !ConstructionManager.Instance.inConstructionMode)
         {

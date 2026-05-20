@@ -16,12 +16,14 @@ public class CraftingSystem : MonoBehaviour
 
     //Craft Buttons
     Button craftAxeBTN;
+    Button craftFishingRodBTN;
     Button craftPlankBTN;
     Button craftWallBTN;
     Button craftFoundationBTN;
 
     //Requirement Text
     TextMeshProUGUI AxeReq1, AxeReq2;
+    TextMeshProUGUI FishingRodReq1, FishingRodReq2;
     TextMeshProUGUI PlankReq1;
     TextMeshProUGUI WallReq1;
     TextMeshProUGUI FoundationReq1;
@@ -30,6 +32,7 @@ public class CraftingSystem : MonoBehaviour
 
     //All Blueprints
     Blueprint axeBlueprint;
+    Blueprint fishingRodBlueprint;
     Blueprint plankBlueprint;
     Blueprint wallBlueprint;
     Blueprint foundationBlueprint;
@@ -94,6 +97,16 @@ public class CraftingSystem : MonoBehaviour
             craftAxeBTN.onClick.AddListener(delegate { CraftAxe(); });
         }
 
+        // FISHING ROD
+        FishingRodReq1 = toolsScreenUI.transform.Find("FishingRod").Find("req1").GetComponent<TextMeshProUGUI>();
+        FishingRodReq2 = toolsScreenUI.transform.Find("FishingRod").Find("req2").GetComponent<TextMeshProUGUI>();
+
+        craftFishingRodBTN = toolsScreenUI.transform.Find("FishingRod").Find("Button").GetComponent<Button>();
+        if (craftFishingRodBTN != null)
+        {
+            craftFishingRodBTN.onClick.AddListener(delegate { CraftFishingRod(); });
+        }
+
         // PLANK
         PlankReq1 = refineScreenUI.transform.Find("Plank").Find("req1").GetComponent<TextMeshProUGUI>();
 
@@ -125,6 +138,12 @@ public class CraftingSystem : MonoBehaviour
         axeBlueprint = new Blueprint("Axe", new List<Blueprint.Ingredient>
         {
             new Blueprint.Ingredient("Stone", 3),
+            new Blueprint.Ingredient("Stick", 3)
+        });
+
+        fishingRodBlueprint = new Blueprint("FishingRod", new List<Blueprint.Ingredient>
+        {
+            new Blueprint.Ingredient("Stone", 1),
             new Blueprint.Ingredient("Stick", 3)
         });
 
@@ -175,6 +194,18 @@ public class CraftingSystem : MonoBehaviour
         }
 
         CraftItem(axeBlueprint, 1);
+    }
+
+    void CraftFishingRod()
+    {
+        if (!CanCraftBlueprint(fishingRodBlueprint, 1, out string error))
+        {
+            Debug.LogWarning(error);
+            RefreshNeededItems();
+            return;
+        }
+
+        CraftItem(fishingRodBlueprint, 1);
     }
 
     void CraftPlank()
@@ -273,6 +304,8 @@ public class CraftingSystem : MonoBehaviour
 
         if (AxeReq1 != null) AxeReq1.text = $"3 Stone [{stoneCount}]";
         if (AxeReq2 != null) AxeReq2.text = $"3 Stick [{stickCount}]";
+        if (FishingRodReq1 != null) FishingRodReq1.text = $"1 Stone [{stoneCount}]";
+        if (FishingRodReq2 != null) FishingRodReq2.text = $"3 Stick [{stickCount}]";
         if (PlankReq1 != null) PlankReq1.text = $"1 Log [{logCount}]";
         if (WallReq1 != null) WallReq1.text = $"4 Plank [{plankCount}]";
         if (FoundationReq1 != null) FoundationReq1.text = $"2 Plank [{plankCount}]";
@@ -296,6 +329,7 @@ public class CraftingSystem : MonoBehaviour
     void UpdateCraftButtonState()
     {
         UpdateButtonState(craftAxeBTN, CanCraftBlueprint(axeBlueprint, 1, out _));
+        UpdateButtonState(craftFishingRodBTN, CanCraftBlueprint(fishingRodBlueprint, 1, out _));
         UpdateButtonState(craftPlankBTN, CanCraftBlueprint(plankBlueprint, 2, out _));
         UpdateButtonState(craftWallBTN, CanCraftBlueprint(wallBlueprint, 1, out _));
         UpdateButtonState(craftFoundationBTN, CanCraftBlueprint(foundationBlueprint, 1, out _));
@@ -332,6 +366,12 @@ public class CraftingSystem : MonoBehaviour
 
     void Update()
     {
+        bool canProcessCraftingHotkey = isOpen || Cursor.lockState == CursorLockMode.Locked || InventorySystem.Instance.isOpen;
+        if (!canProcessCraftingHotkey)
+        {
+            return;
+        }
+
         if (Input.GetKeyDown(KeyCode.C) && !isOpen)
         {
             craftingScreenUI.SetActive(true);
